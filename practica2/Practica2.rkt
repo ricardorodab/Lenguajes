@@ -8,13 +8,20 @@
 
 ; Ejercicio MList
 
+;(define-type MList
+;  [MEmpty]
+;  [MCons
+;   (n numOCadena?)
+;   (lst MList?)])
 (define-type MList
   [MEmpty]
-  [MCons
-   (n numOCadena?)
-   (lst MList?)])
+  [MCons (n esNull?) (lst MList?)])
 
 
+(define (esNull? n)
+  (cond
+    [(null? n) #t]
+    [else #t]))
 ; Ejercicio NTree
 (define-type NTree
   [TLEmpty]
@@ -102,7 +109,9 @@
 (define ciencias (building "Facultad de Ciencias" gps-ciencias))
 (define zocalo (building "Zocalo" gps-zocalo))
 (define plaza-perisur (building "Plaza Perisur" gps-perisur))
-;(define plazas (MCons plaza-satelite (MCons plaza-perisur (MEmpty))))
+(define plazas (MCons plaza-satelite (MCons plaza-perisur (MEmpty))))
+
+;(define (gps-coordinates 
 
 ; Ejercicio area
 (define (area figura)
