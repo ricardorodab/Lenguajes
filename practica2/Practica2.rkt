@@ -9,10 +9,6 @@
 ; Ejercicio MList
 
 ;(define-type MList
-;  [MEmpty]
-;  [MCons
-;   (n numOCadena?)
-;   (lst MList?)])
 
 (define (any? x) #t)
 
