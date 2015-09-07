@@ -13,15 +13,15 @@
 ;  [MCons
 ;   (n numOCadena?)
 ;   (lst MList?)])
-
-(define (any? x) #t)
-
 (define-type MList
   [MEmpty]
-  [MCons (n any?)
-         (lst MList?)])
+  [MCons (n esNull?) (lst MList?)])
 
 
+(define (esNull? n)
+  (cond
+    [(null? n) #t]
+    [else #t]))
 ; Ejercicio NTree
 (define-type NTree
   [TLEmpty]
@@ -64,14 +64,8 @@
 ; Ejercicio printML
 
 ;(define (printML lst)
-(define (printML l )
-  (letrec ([printMLAux (lambda (lm acc)
-                         (type-case MList lm
-                           [MEmpty ()  (substring acc 1) ]
-                           [MCons (n lis)   (if (MList? n) (string-append (printML n ) "," (printMLAux lis "") ) (printMLAux lis (string-append  acc  "," (~a n) )) )  ]))])
-    (type-case MList l
-      [MEmpty () "[]" ]
-      [MCons (n lis)  (format "[~a]" (printMLAux l "") ) ])))
+;  (type-case MList lst
+;    [MEmpty "[]"]))
 
 
 ; Ejercicio concatML
@@ -117,20 +111,7 @@
 (define plaza-perisur (building "Plaza Perisur" gps-perisur))
 (define plazas (MCons plaza-satelite (MCons plaza-perisur (MEmpty))))
 
-; Ejercicio gps-coordinates
-
-(define (gps-coordinates lst)
-  (type-case MList lst
-    [MEmpty () (MEmpty)]
-    [MCons (n lst2) (MCons (if (MList? n)
-                               (gps-coordinates n)
-                               (dameCoordenadas n)) (gps-coordinates lst2))]))
-
-; Ejercicio closest-building
-
-;(define (closest-building lst1 lst2)
-;  (
-
+;(define (gps-coordinates 
 
 ; Ejercicio area
 (define (area figura)
@@ -152,13 +133,6 @@
 
 ; FUNCIONES AUXILIARES
 
-; Función que nos da las coordenadas de un punto en el mapa.
-
-(define (dameCoordenadas gps)
-  (type-case Location gps
-    [building (name loc)
-              (type-case Coordinates loc
-                [GPS (lat long) (GPS lat long)])]))
 
 ; Función auxiliar para poder concatenar otra lista a la primera.
 
