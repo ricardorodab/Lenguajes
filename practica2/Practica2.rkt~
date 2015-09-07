@@ -8,19 +8,20 @@
 
 ; Ejercicio MList
 
+;(define-type MList
+;  [MEmpty]
+;  [MCons
+;   (n numOCadena?)
+;   (lst MList?)])
 (define-type MList
   [MEmpty]
-  [MCons
-   (n esTrue?)
-   (lst MList?)])
+  [MCons (n esNull?) (lst MList?)])
 
-; Función AUXILIAR que siempre regresa #t
 
-(define (esTrue? n)
+(define (esNull? n)
   (cond
     [(null? n) #t]
     [else #t]))
-
 ; Ejercicio NTree
 (define-type NTree
   [TLEmpty]
@@ -110,20 +111,7 @@
 (define plaza-perisur (building "Plaza Perisur" gps-perisur))
 (define plazas (MCons plaza-satelite (MCons plaza-perisur (MEmpty))))
 
-; Ejercicio gps-coordinates
-
-(define (gps-coordinates lst)
-  (type-case MList lst
-    [MEmpty () (MEmpty)]
-    [MCons (n lst2) (MCons (if (MList? n)
-                               (gps-coordinates n)
-                               (dameCoordenadas n)) (gps-coordinates lst2))]))
-
-; Ejercicio closest-building
-
-;(define (closest-building lst1 lst2)
-;  (
-
+;(define (gps-coordinates 
 
 ; Ejercicio area
 (define (area figura)
@@ -145,13 +133,6 @@
 
 ; FUNCIONES AUXILIARES
 
-; Función que nos da las coordenadas de un punto en el mapa.
-
-(define (dameCoordenadas gps)
-  (type-case Location gps
-    [building (name loc)
-              (type-case Coordinates loc
-                [GPS (lat long) (GPS lat long)])]))
 
 ; Función auxiliar para poder concatenar otra lista a la primera.
 
