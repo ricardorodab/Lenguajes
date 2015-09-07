@@ -113,6 +113,21 @@
 (define plaza-perisur (building "Plaza Perisur" gps-perisur))
 (define plazas (MCons plaza-satelite (MCons plaza-perisur (MEmpty))))
 
+
+
+;Ejercicio haversine
+
+(define (haversine gps1 gps2)
+  (let*  [(radio-tierra 6371)
+          (lat (degrees->radians (- (dameLatitud gps2 ) (dameLatitud gps1))))
+          (long (degrees->radians (- (dameLongitud gps2) (dameLongitud gps1 ))))
+          (a  (+ (sqr(sin(/ lat 2))) (* (cos (degrees->radians (dameLatitud gps1))) (* (cos (degrees->radians (dameLatitud gps2))) (sqr (sin (/ long 2)))))))
+          (c (* 2 (asin (sqrt a))))
+          (d (* radio-tierra c))]
+
+    d))
+
+
 ; Ejercicio gps-coordinates
 
 (define (gps-coordinates lst)
@@ -147,6 +162,16 @@
 
 
 ; FUNCIONES AUXILIARES
+
+; Función que nos da la latitud de una coordenada
+(define (dameLatitud gps)
+  (type-case Coordinates gps
+    [GPS (lat long) lat]))
+
+; Función que nos da la longitud de una coordenada
+(define (dameLongitud gps)
+  (type-case Coordinates gps
+    [GPS (lat long) long]))
 
 ; Función que nos da las coordenadas de un punto en el mapa.
 
