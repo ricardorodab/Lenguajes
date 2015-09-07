@@ -8,12 +8,18 @@
 
 ; Ejercicio MList
 
+;(define-type MList
+;  [MEmpty]
+;  [MCons
+;   (n numOCadena?)
+;   (lst MList?)])
+
+(define (any? x) #t)
+
 (define-type MList
   [MEmpty]
-  [MCons
-   (n numOCadena?)
-   (lst MList?)])
-
+  [MCons (n any?)
+         (lst MList?)])
 
 ; Ejercicio NTree
 (define-type NTree
@@ -57,8 +63,14 @@
 ; Ejercicio printML
 
 ;(define (printML lst)
-;  (type-case MList lst
-;    [MEmpty "[]"]))
+(define (printML l )
+  (letrec ([printMLAux (lambda (lm acc)
+                         (type-case MList lm
+                           [MEmpty ()  (substring acc 1) ]
+                           [MCons (n lis)   (if (MList? n) (string-append (printML n ) "," (printMLAux lis "") ) (printMLAux lis (string-append  acc  "," (~a n) )) )  ]))])
+    (type-case MList l
+      [MEmpty () "[]" ]
+      [MCons (n lis)  (format "[~a]" (printMLAux l "") ) ])))
 
 
 ; Ejercicio concatML
