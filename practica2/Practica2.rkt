@@ -8,8 +8,6 @@
 
 ; Ejercicio MList
 
-;(define-type MList
-
 (define (any? x) #t)
 
 (define-type MList
@@ -107,10 +105,12 @@
 (define gps-ciencias (GPS 19.3239411016 -99.179806709))
 (define gps-zocalo (GPS 19.432721893261117 -99.13332939147949))
 (define gps-perisur (GPS 19.304135 -99.19001000000003))
+
 (define plaza-satelite (building "Plaza Satelite" gps-satelite))
 (define ciencias (building "Facultad de Ciencias" gps-ciencias))
 (define zocalo (building "Zocalo" gps-zocalo))
 (define plaza-perisur (building "Plaza Perisur" gps-perisur))
+
 (define plazas (MCons plaza-satelite (MCons plaza-perisur (MEmpty))))
 
 
@@ -139,8 +139,21 @@
 
 ; Ejercicio closest-building
 
-;(define (closest-building lst1 lst2)
-;  (
+(define (closest-building coord lst2)
+  (type-case Location coord
+    [building (name loc)
+              (type-case Coordinates loc
+              [GPS (lat long)
+                   (diferencias lat long lst2 -1 (GPS lat long))])]))
+
+; Ejcercicio buildings-at-distance
+
+(define (buildings-at-distance edif lst pto)
+  (type-case Location edif
+    [building (name loc)
+              (type-case Coordinates loc
+                [GPS (lat long)
+                     (alrededor lat long lst (/ pto 100) (MEmpty))])]))
 
 
 ; Ejercicio area
@@ -162,6 +175,32 @@
 
 
 ; FUNCIONES AUXILIARES
+
+; Función auxiliar para encontrar la distancia menor entre dos puntos del GPS.
+
+(define (diferencias lat long lst n gps)
+  (type-case MList lst
+    [MEmpty () gps]
+    [MCons (n1 lst2) (if
+                      (or (<= (sqrt (+ (sqr (- lat (lat-coordinates n1))) (sqr (- long (long-coordinates n1))))) n) (= n -1))
+                      (diferencias lat long lst2 (sqrt (+ (sqr (- lat (lat-coordinates n1))) (sqr (- long (long-coordinates n1))))) n1)
+                      (diferencias lat long lst2 n gps))]))
+
+; Función auxiliar que nos da la latitud de unas coordenadas GPS.
+
+(define (lat-coordinates gps)
+  (type-case Location gps
+    [building (name loc)
+              (type-case Coordinates loc
+                [GPS (lat long) lat])]))
+
+; Función auxiliar que nos da la longitud de unas coordenadas GPS.
+
+(define (long-coordinates gps)
+  (type-case Location gps
+    [building (name loc)
+              (type-case Coordinates loc
+                [GPS (lat long) long])]))
 
 ; Función que nos da la latitud de una coordenada
 (define (dameLatitud gps)
@@ -187,6 +226,16 @@
   (type-case MList lst2
     [MEmpty () (MEmpty)]
     [MCons (n lst) (MCons n (continuaLista2 lst))]))
+
+; Función auxiliar que nos da dado un punto, edificios que estén a cierta distancia.
+
+(define (alrededor lat long lst pto Mlist)
+  (type-case MList lst
+    [MEmpty () Mlist]
+    [MCons (n1 lst2) (if
+                      (<= (+ (sqrt (+ (sqr (- lat (lat-coordinates n1))) (sqr (- long (long-coordinates n1))))) .006) pto)
+                      (MCons n1 (alrededor lat long lst2 pto Mlist))
+                      (alrededor lat long lst2 pto Mlist))]))
 
 ; Función auxiliar para cambiar un arreglo a lista propias.
 
