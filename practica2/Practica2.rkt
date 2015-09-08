@@ -166,15 +166,41 @@
 
 ; Ejercicio in-figure?
 
-;(define (in-figure? figura punto)
-;  (type-case Figure figura
-;    [Circle (pos num) (estaPunto 1 punto pos num num)]
-;    [Square (pos num) (estaPunto 2 punto pos num num)]
-;    [Rectangle (pos x y) (estaPunto 3 punto pos x y)]))
-
+(define (in-figure? figura punto)
+  (type-case Figure figura
+    [Circle (pos radio)
+            (type-case Position pos
+              [2D-Point (x y) (estaPunto x y radio punto)])]
+    [Square (pos long)
+            (type-case Position pos
+              [2D-Point (x y) (estaPuntoCuadrado x y long punto)])]
+    [Rectangle (pos ancho largo)
+               (type-case Position pos
+               [2D-Point (x2 y2) (estaPuntoRectangulo x2 y2 ancho largo punto)])]))
 
 
 ; FUNCIONES AUXILIARES
+
+
+
+; Función auxiliar para devolver si un punto está dentro de un rectángulo.
+
+(define (estaPuntoRectangulo x y ancho largo punto)
+  (type-case Position punto
+    [2D-Point (x2 y2) (and (and (>= x2 x) (>= y2 y)) (and (<= x2 (+ x largo)) (<= y2 (+ y ancho))))]))
+
+; Función auxiliar para devolver si un punto está dentro de un cuadrado.
+
+(define (estaPuntoCuadrado x y long punto)
+  (type-case Position punto
+    [2D-Point (x2 y2) (and (and (>= x2 x) (>= y2 y)) (and (<= x2 (+ x long)) (<= y2 (+ y long))))]))
+
+; Función auxiliar para devolver si un punto está dentro de un círculo.
+
+(define (estaPunto x1 y1 radio punto)
+  (type-case Position punto
+    [2D-Point (x2 y2) (<= (sqrt (+ (sqr (- x2 x1)) (sqr (- y2 y1)))) radio)]))
+
 
 ; Función auxiliar para encontrar la distancia menor entre dos puntos del GPS.
 
