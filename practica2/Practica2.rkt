@@ -295,3 +295,140 @@
     [(eq? l1 empty) l2]
     [(eq? l2 empty) l1]
     [else  (cons (car l1) (mconcat (cdr l1) l2))]))
+
+
+; PRUEBAS
+
+; Test MArray
+
+(test (MArray 4 '(1 2 3)) (MArray 4 '(1 2 3)))
+(test (MArray 4 '(1 0 0)) (MArray 4 '(1 0 0)))
+(test (MArray 3 '(2 2)) (MArray 3 '(2 2)))
+(test (MArray 4 '(0 0 0)) (MArray 4 '(0 0 0)))
+(test (MArray 0 '()) (MArray 0 '()))
+
+; Test MList
+
+(test (MEmpty) (MEmpty))
+(test (MCons 1 (MCons 2 (MCons 3 (MEmpty)))) (MCons 1 (MCons 2 (MCons 3 (MEmpty)))))
+(test (MCons 0 (MCons 0 (MCons 0 (MEmpty)))) (MCons 0 (MCons 0 (MCons 0 (MEmpty)))))
+(test (MCons 1 (MCons 3 (MEmpty))) (MCons 1 (MCons 3 (MEmpty))))
+(test (MCons 7 (MCons 4 (MCons 10 (MEmpty)))) (MCons 7 (MCons 4 (MCons 10 (MEmpty)))))
+
+; Test NTree
+
+(test (TLEmpty) (TLEmpty))
+(test (NodeN 1 (list (TLEmpty) (TLEmpty) (TLEmpty))) (NodeN 1 (list (TLEmpty) (TLEmpty) (TLEmpty))))
+(test (NodeN 1 (list (NodeN 2 (list (TLEmpty)))
+                 (NodeN 3 (list (TLEmpty)))
+                 (NodeN 4 (list (TLEmpty) (TLEmpty) (TLEmpty))))) (NodeN 1 (list (NodeN 2 (list (TLEmpty)))
+                 (NodeN 3 (list (TLEmpty)))
+                 (NodeN 4 (list (TLEmpty) (TLEmpty) (TLEmpty))))))
+
+; Test 2D-Point
+
+(test (2D-Point 0 0) (2D-Point 0 0))
+(test (2D-Point 1 (sqrt 2)) (2D-Point 1 1.4142135623730951))
+(test (2D-Point 1 (+ 4 4)) (2D-Point 1 8))
+(test (2D-Point 100 -100) (2D-Point 100 -100))
+
+; Test Figure
+
+(test (Circle (2D-Point 2 2) 2) (Circle (2D-Point 2 2) 2))
+(test (Circle (2D-Point 0 0) 0) (Circle (2D-Point 0 0) 0))
+(test (Square (2D-Point 0 3) 3) (Square (2D-Point 0 3) 3))
+(test (Square (2D-Point 0 0) 0) (Square (2D-Point 0 0) 0))
+(test (Rectangle (2D-Point 0 2) 2 3) (Rectangle (2D-Point 0 2) 2 3))
+(test (Rectangle (2D-Point 0 0) 0 0) (Rectangle (2D-Point 0 0) 0 0))
+
+; Test setvalueA
+
+(test (setvalueA (MArray 5 '(0 0 0 0 0)) 0 0) (MArray 5 '(0 0 0 0 0)))
+(test (setvalueA (MArray 5 '(0 0 0 0 0))  4 4) (MArray 5 '(0 0 0 0 4)))
+(test (setvalueA (MArray 5 '(0 0 0 0 0))  3 4) (MArray 5 '(0 0 0 4 0)))
+(test (setvalueA (MArray 5 '(0 0 0 0 0))  2 4) (MArray 5 '(0 0 4 0 0)))
+(test (setvalueA (MArray 5 '(0 0 0 0 0))  1 4) (MArray 5 '(0 4 0 0 0)))
+
+; Test MArray2MList
+
+(test (MArray2MList (MArray 0 '())) (MEmpty))
+(test (MArray2MList (MArray 5 '("a" "b"))) (MCons "a" (MCons "b" (MEmpty))))
+(test (MArray2MList (MArray 3 '(1 2 3))) (MCons 1 (MCons 2 (MCons 3 (MEmpty)))))
+(test (MArray2MList (MArray 4 '(0 0 0 0))) (MCons 0 (MCons 0 (MCons 0 (MCons 0 (MEmpty))))))
+(test (MArray2MList (MArray 1 '(1000))) (MCons 1000 (MEmpty)))
+
+; Test printML
+
+(test (printML (MEmpty)) "[]")
+(test (printML (MCons 7 (MEmpty))) "[7]")
+(test (printML (MCons -7 (MEmpty))) "[-7]")
+(test (printML (MCons 7 (MCons 4 (MEmpty)))) "[7,4]")
+(test (printML (MCons (MCons 1 (MCons 2 (MEmpty))) (MCons 3 (MEmpty)))) "[[1,2],3]")
+
+; Test concatML
+
+(test (concatML (MEmpty) (MEmpty)) (MEmpty))
+(test (concatML (MEmpty) (MCons 1 (MEmpty))) (MCons 1 (MEmpty)))
+(test (concatML (MCons 1 (MEmpty)) (MEmpty)) (MCons 1 (MEmpty)))
+(test (concatML (MCons 7 (MCons 4 (MEmpty))) (MCons 1 (MEmpty))) (MCons 7 (MCons 4 (MCons 1 (MEmpty)))))
+(test (concatML (MCons 7 (MCons 4 (MEmpty))) (MCons 1 (MCons 10 (MEmpty)))) (MCons 7 (MCons 4 (MCons 1 (MCons 10 (MEmpty))))))
+
+; Test lengthML
+
+(test (lengthML (MEmpty)) 0)
+(test (lengthML (MCons 7 (MEmpty))) 1)
+(test (lengthML (MCons 7 (MCons 4 (MEmpty)))) 2)
+(test (lengthML (MCons 7 (MCons 4 (MCons 1 (MEmpty))))) 3)
+(test (lengthML (MCons 7 (MCons 4 (MCons 1 (MCons 10 (MEmpty)))))) 4)
+
+; Test mapML
+
+(test (mapML (lambda (x) (>= x 5)) (MCons 7 (MCons 4 (MCons 1 (MCons 10 (MEmpty)))))) (MCons #t (MCons #f (MCons #f (MCons #t (MEmpty))))))
+(test (mapML (lambda (x) 0) (MCons "w" (MEmpty))) (MCons 0 (MEmpty)))
+(test (mapML add1 (MCons 7 (MCons 4 (MEmpty)))) (MCons 8 (MCons 5 (MEmpty))))
+(test (mapML (lambda (x) (* x x)) (MCons 10 (MCons 3 (MEmpty)))) (MCons 100 (MCons 9 (MEmpty))))
+
+; Test filterML
+
+(test (filterML (lambda (x) (not (zero? x))) (MCons 2 (MCons 0 (MCons 1 (MEmpty))))) (MCons 2 (MCons 1 (MEmpty))))
+(test (filterML (lambda (l) (not (MEmpty? l)))
+            (MCons (MCons 1 (MCons 4 (MEmpty))) (MCons (MEmpty) (MCons 1 (MEmpty))))) (MCons (MCons 1 (MCons 4 (MEmpty))) (MCons 1 (MEmpty))))
+(test (filterML (lambda (x) (zero? x)) (MCons 6 (MCons 6 (MCons 7 (MEmpty))))) (MEmpty))
+
+; Test haversine
+
+(test (haversine gps-ciencias gps-zocalo) 13.041407257443655)
+(test (haversine gps-ciencias gps-perisur) 2.4488148656436075)
+(test (haversine gps-satelite gps-perisur) 23.406431619747746)
+(test (haversine gps-satelite gps-satelite) 0.0)
+(test (haversine gps-zocalo gps-satelite) 13.653182838772127)
+
+; Test gps-coordinates y closest-building
+
+(test (gps-coordinates (MEmpty)) (MEmpty))
+(test (gps-coordinates plazas) (MCons (GPS 19.510482 -99.23411900000002) (MCons (GPS 19.304135 -99.19001000000003) (MEmpty))))
+(test (closest-building zocalo plazas) (building "Plaza Satelite" (GPS 19.510482 -99.23411900000002)))
+(test (closest-building ciencias plazas) (building "Plaza Perisur" (GPS 19.304135 -99.19001000000003)))
+
+; Test buildings-at-distance
+
+(test (buildings-at-distance ciencias plazas 0) (MEmpty))
+(test (buildings-at-distance ciencias plazas 10) (MCons (building "Plaza Perisur" (GPS 19.304135 -99.19001000000003)) (MEmpty)))
+(test (buildings-at-distance ciencias plazas 20) (MCons (building "Plaza Perisur" (GPS 19.304135 -99.19001000000003)) (MEmpty)))
+(test (buildings-at-distance ciencias plazas 25) (MCons (building "Plaza Satelite" (GPS 19.510482 -99.23411900000002))
+                                                         (MCons (building "Plaza Perisur" (GPS 19.304135 -99.19001000000003)) (MEmpty))))
+      
+; Test area
+
+(test (area (Circle (2D-Point 5 5) 4)) 50.265482456)
+(test (area (Square (2D-Point 0 0) 20)) 400)
+(test (area (Rectangle (2D-Point 3 4) 5 10)) 50)
+(test (area (Rectangle (2D-Point (sqrt 50) 20) (sqrt 10) 10)) 31.622776601683796)
+
+; Test in-figure? 
+
+(test (in-figure? (Square (2D-Point 5 5) 4) (2D-Point 6 6)) #t)
+(test (in-figure? (Rectangle (2D-Point 5 5) 4 6) (2D-Point 4 4)) #f)
+(test (in-figure? (Rectangle (2D-Point 5 5) 4 6) (2D-Point 6 6)) #t)
+(test (in-figure? (Circle (2D-Point 0 0) 4) (2D-Point 4 4)) #f)
+(test (in-figure? (Circle (2D-Point 0 0) 0) (2D-Point 0 0)) #t)
