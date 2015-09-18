@@ -30,25 +30,79 @@
 
 
 
-(define (bpm->zone fc zone)
+(define (bpm->zone fc z)
   (if (empty? fc)
       empty
-      (cons (busca (car fc) zone) (bpm->zone (cdr fc) zone))))
+      (letrec ([busca (lambda (n zone)
+                        (if (empty? zone)
+                            empty
+                            (type-case HRZ (car zone) 
+                              [resting (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+                              [warm-up (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+                              [fat-burning (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+                              [aerobic (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+                              [anaerobic (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+                              [maximum (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+                              )))])
+        (cons (busca (car fc) z) (bpm->zone (cdr fc) z)))))
 
-(define (busca n zone)
-  (if (empty? zone)
-      empty
-      (type-case HRZ (car zone) 
-        [resting (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
-        [warm-up (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
-        [fat-burning (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
-        [aerobic (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
-        [anaerobic (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
-        [maximum (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
-    )))
 
 
-(bpm->zone empty my-zones)
-(bpm->zone '(50 60) my-zones)
-(bpm->zone '(140 141) my-zones)
+(define (ninBT arbol)
+  (type-case BTree  arbol
+    [EmptyBT () 0]
+    [BNode  (c l e r) 
+           (if(and (EmptyBT? l) (EmptyBT? r))
+              0
+              (+ (+ 1 (ninBT l))(ninBT r)))]))
 
+(define (nlBT arbol)
+  (type-case BTree arbol
+    [EmptyBT () 0]
+    [BNode (c l e r)
+           (if(or (EmptyBT? l)(EmptyBT? r))
+              1
+              (+(nlBT l) (nlBT r)))]))
+
+
+(define (nnBT arbol)
+  (type-case BTree arbol
+    [EmptyBT () 0]
+    [BNode (c l e r)
+           (if(and (EmptyBT? l)(EmptyBT? r))
+              1
+              (+ (nnBT l) (+ 1 (nnBT r))))]))
+
+(define (mapBT f arb)
+  (type-case BTree arb
+    [EmptyBT () ebt]
+    [BNode (c l e r)
+           (if (EmptyBT? l)
+               (bnn ebt (f e) (mapBT f r))
+               (if(EmptyBT? r)
+                  (bnn (mapBT f l) (f e) ebt)
+                  (bnn (mapBT f l) (f e) (mapBT f r))))]))
+
+
+
+
+
+(define (preorderBT arbol )
+  (type-case BTree arbol
+    [EmptyBT () empty]
+    [BNode (c l e r)  
+           (flatten (list e (preorderBT l) (preorderBT r)))]) )
+
+
+(define (inorderBT arbol )
+  (type-case BTree arbol
+    [EmptyBT () empty]
+    [BNode (c l e r)  
+           (flatten (list  (inorderBT l)  e (inorderBT r)))]) )
+
+
+(define (posorderBT arbol )
+  (type-case BTree arbol
+    [EmptyBT () empty]
+    [BNode (c l e r)  
+           (flatten (list  (posorderBT l) (posorderBT r) e))]) )
