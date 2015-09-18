@@ -14,17 +14,41 @@
      (maximum (+ rest (* range (+ 0.5 (* 0.1 4)))) (+ rest  (* range (+ 0.5 (* 0.1 5)))))
     )))
 
-
-
 (define my-zones (zones 50 180))
 
 
 (define (get-zone symbol zone)
-  (type-case zone HRZ
-    [resting (low high) low]
-    [warm-up (low high) low]
-    [fat-burning (low high) low]
-    [aerobic (low high) low]
-    [anaerobic (low high) low]
-    [maximum (low high) low] ))
+  (cond
+   [(empty? zone ) empty]
+   [(and (resting? (car zone)) (equal? symbol 'resting)) (car zone) ]
+   [(and (warm-up? (car zone)) (equal? symbol 'warm-up)) (car zone) ]
+   [(and (fat-burning? (car zone)) (equal? symbol 'fat-burning)) (car zone) ]
+   [(and (aerobic? (car zone)) (equal? symbol 'aerobic)) (car zone) ]
+   [(and (anaerobic? (car zone)) (equal? symbol 'anaerobic)) (car zone) ]
+   [(and (maximum? (car zone)) (equal? symbol 'maximum)) (car zone) ]
+   [else (get-zone symbol (cdr zone))]))
+
+
+
+(define (bpm->zone fc zone)
+  (if (empty? fc)
+      empty
+      (cons (busca (car fc) zone) (bpm->zone (cdr fc) zone))))
+
+(define (busca n zone)
+  (if (empty? zone)
+      empty
+      (type-case HRZ (car zone) 
+        [resting (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+        [warm-up (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+        [fat-burning (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+        [aerobic (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+        [anaerobic (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+        [maximum (low high) (if (and (<= low n) (<= n high)) (car zone) (busca n (cdr zone)))]
+    )))
+
+
+(bpm->zone empty my-zones)
+(bpm->zone '(50 60) my-zones)
+(bpm->zone '(140 141) my-zones)
 
