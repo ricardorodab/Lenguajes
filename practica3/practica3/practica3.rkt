@@ -16,6 +16,15 @@
 
 
 
-(zones 50 180)
+(define my-zones (zones 50 180))
 
+
+(define (get-zone symbol zone)
+  (type-case zone HRZ
+    [resting (low high) low]
+    [warm-up (low high) low]
+    [fat-burning (low high) low]
+    [aerobic (low high) low]
+    [anaerobic (low high) low]
+    [maximum (low high) low] ))
 
