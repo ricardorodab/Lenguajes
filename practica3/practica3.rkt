@@ -46,6 +46,16 @@
                               )))])
         (cons (busca (car fc) z) (bpm->zone (cdr fc) z)))))
 
+(define (create-trackpoints l zones)
+  (if (empty? l)
+      empty
+       (cons
+        (trackpoint (GPS (first (second (car l))) (second (second (car l)))) (third (car l)) (first (bpm->zone (list (third (car l))) zones)) (first (car l)))
+        (create-trackpoints (cdr l) zones) )
+      
+      ))
+
+(create-trackpoints (take raw-data 4) my-zones)
 
 
 (define (ninBT arbol)
