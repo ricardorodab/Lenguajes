@@ -11,7 +11,7 @@
     [numS (n) (num n)]
     [idS (name) (id name)]
     [funS (params body) (fun (params (desugar body)))]
-    [appS (fuS ars) (app ((desugar fuS) (dameFAE ars)))] ;(desugar args)?
+    [appS (fuS ars) (app (desugar fuS) (dameFAE ars))]
     [binopS (f l r) (binop f (desugar l) (desugar r))]
     [withS (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]
     [with*S (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]))
@@ -25,8 +25,34 @@
   (desugar (parse sexp)))
 
 (define (interp expr env)
-  ;; Implementar interp
-  (error 'interp "Not implemented"))
+ (type-case FAE expr
+   [num (n) (numV n)]
+   [binop (f l r) (opV f (interp l env) (interp r env))]
+   [id (name) (lookup name env)]
+   [fun (params body) (closureV params body env)] ;Lista parámetros
+   [app (fu args) ;MODIFICAR APP
+        (local ([define fun-val (interp fu env)])
+          (interp (closureV-body fun-val)
+                  (aSub (closureV-param fun-val)
+                        (interp args env) 
+                        (closureV-env fun-val))))]))
+
+(define (opV proc num1 num2)
+  (type-case FAE-Value num1
+    [numV (n1)
+          (type-case FAE-Value num2
+            [numV (n2) (numV (proc n1 n2))]
+            [closureV (param body env) (error 'opV "No numV")])]
+  [closureV (param body env) (error 'opV "No numV")])) 
+
+(define (lookup name env)
+  (type-case Env env
+    [mtSub () (error 'lookup "No existe el valor")]
+     [aSub (name2 value env2)
+           (if (symbol=? name2 name)
+               value
+               (lookup name env2))]))
+  
 
 (define (rinterp expr)
   (interp expr (mtSub)))
