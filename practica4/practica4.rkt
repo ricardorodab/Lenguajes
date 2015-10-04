@@ -20,6 +20,10 @@
 (test (desugar (parse '{+ 3 4})) (binop + (num 3) (num 4)))
 (test (desugar (parse '{+ {- 3 4} 7})) (binop + (binop - (num 3) (num 4)) (num 7)))
 (test (desugar (parse '{with {{x {+ 5 5}}} x})) (app (fun '(x) (id 'x)) (list (binop + (num 5) (num 5))) ))
+;(app (fun '(x y) (binop + (id 'x) (id 'y))) (list (num 5) (binop - (num 5) (num 3))))
+;(rinterp (app (fun '(x y) (binop + (id 'x) (id 'y))) (list (num 5) (binop - (num 5) (num 3)))))
+;(interp (app (fun '(x y) (binop + (id 'x) (id 'y))) (list (num 5) (binop - (num 5) (num 3)))) (mtSub))
+;(appArgs (fun '(x y) (binop + (id 'x) (id 'x))) '(x y) (list (num 5) (binop - (num 5) (num 3))) (mtSub))
 
 (define (cparse sexp)
   (desugar (parse sexp)))
@@ -29,13 +33,23 @@
    [num (n) (numV n)]
    [binop (f l r) (opV f (interp l env) (interp r env))]
    [id (name) (lookup name env)]
-   [fun (params body) (closureV params body env)] ;Lista parámetros
-   [app (fu args) ;MODIFICAR APP
-        (local ([define fun-val (interp fu env)])
-          (interp (closureV-body fun-val)
-                  (aSub (closureV-param fun-val)
-                        (interp args env) 
-                        (closureV-env fun-val))))]))
+   [fun (params body) (closureV params body env)]
+   [app (fu args) (local ([define fulist (interp fu env)])
+                         (appArgs fu (closureV-param fulist) args env))]))
+
+
+(define (appArgs fu fulst args env)
+  (if (empty? (cdr fulst))
+      (local  ([define fun-val (interp fu env)])
+        (interp (closureV-body fun-val)
+                (aSub (car fulst)
+                      (interp (car args) env) 
+                      (closureV-env fun-val))))
+      (appArgs fu (cdr fulst) (cdr args) (aSub (car fulst)
+                                               (interp (car args) env)
+                                               env))))
+
+    
 
 (define (opV proc num1 num2)
   (type-case FAE-Value num1
@@ -47,7 +61,7 @@
 
 (define (lookup name env)
   (type-case Env env
-    [mtSub () (error 'lookup "No existe el valor")]
+    [mtSub () (error 'lookup "No existe el valor "(symbol->string name))]
      [aSub (name2 value env2)
            (if (symbol=? name2 name)
                value
@@ -69,6 +83,7 @@
 (test (rinterp (cparse '{with {{x 5}} {+ x {with {{y 3}} x}}})) (numV 10))
 (test (rinterp (cparse '{with {{x 5}} {with {{y x}} y}})) (numV 5))
 (test (rinterp (cparse '{with {{x 5}} {with {{x x}} x}})) (numV 5))
+;hasta aquí
 (test (rinterp (cparse '{{fun {x} x} 3})) (numV 3))
 (test (rinterp (cparse '{{{fun {x} x} {fun {x} {+ x 5}}} 3})) (numV 8))
 (test (rinterp (cparse '{with {{x 3}} {fun {y} {+ x y}}})) (closureV '(y) (binop + (id 'x) (id 'y)) (aSub 'x (numV 3) (mtSub))))
