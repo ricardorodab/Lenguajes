@@ -10,23 +10,38 @@
   (type-case FAES expr
     [numS (n) (num n)]
     [idS (name) (id name)]
-    [funS (params body) (fun (params (desugar body)))]
+    [funS (params body) (fun params (desugar body))]
     [appS (fuS ars) (app (desugar fuS) (dameFAE ars))]
     [binopS (f l r) (binop f (desugar l) (desugar r))]
     [withS (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]
     [with*S (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]))
 
+(define (sacaVal lst)
+  (if (empty? lst)
+      '()
+      (type-case Binding (car lst)
+        [bind (name val) (cons (desugar val) (sacaVal (cdr lst)))])))
 
-(test (desugar (parse '{+ 3 4})) (binop + (num 3) (num 4)))
-(test (desugar (parse '{+ {- 3 4} 7})) (binop + (binop - (num 3) (num 4)) (num 7)))
-(test (desugar (parse '{with {{x {+ 5 5}}} x})) (app (fun '(x) (id 'x)) (list (binop + (num 5) (num 5))) ))
-;(app (fun '(x y) (binop + (id 'x) (id 'y))) (list (num 5) (binop - (num 5) (num 3))))
-;(rinterp (app (fun '(x y) (binop + (id 'x) (id 'y))) (list (num 5) (binop - (num 5) (num 3)))))
-;(interp (app (fun '(x y) (binop + (id 'x) (id 'y))) (list (num 5) (binop - (num 5) (num 3)))) (mtSub))
-;(appArgs (fun '(x y) (binop + (id 'x) (id 'x))) '(x y) (list (num 5) (binop - (num 5) (num 3))) (mtSub))
+; Me da el nombre de las funciones.
+
+(define (sacaName lst)
+  (if (empty? lst)
+      '()
+      (type-case Binding (car lst)
+        [bind (name val) (cons name (sacaName (cdr lst)))])))
+
+; Función auxiliar para manejar listas de FAEs.
+
+(define (dameFAE lst)
+  (if (empty? lst)
+      '()
+      (cons (desugar (car lst)) (dameFAE (cdr lst)))))
+
 
 (define (cparse sexp)
   (desugar (parse sexp)))
+
+; Función interp.
 
 (define (interp expr env)
  (type-case FAE expr
@@ -37,6 +52,7 @@
    [app (fu args) (local ([define fulist (interp fu env)])
                          (appArgs fu (closureV-param fulist) args env))]))
 
+; Función auxiliar para la interpretación de aplicación de funciones.
 
 (define (appArgs fu fulst args env)
   (if (empty? (cdr fulst))
@@ -49,7 +65,7 @@
                                                (interp (car args) env)
                                                env))))
 
-    
+; Función para interpretar las funciones binarias.
 
 (define (opV proc num1 num2)
   (type-case FAE-Value num1
@@ -67,10 +83,12 @@
                value
                (lookup name env2))]))
   
-
 (define (rinterp expr)
   (interp expr (mtSub)))
 
+(test (desugar (parse '{+ 3 4})) (binop + (num 3) (num 4)))
+(test (desugar (parse '{+ {- 3 4} 7})) (binop + (binop - (num 3) (num 4)) (num 7)))
+(test (desugar (parse '{with {{x {+ 5 5}}} x})) (app (fun '(x) (id 'x)) (list (binop + (num 5) (num 5))) ))
 (test (rinterp (cparse '3)) (numV 3))
 (test (rinterp (cparse '{+ 3 4})) (numV 7))
 (test (rinterp (cparse '{+ {- 3 4} 7})) (numV 6))
@@ -83,7 +101,6 @@
 (test (rinterp (cparse '{with {{x 5}} {+ x {with {{y 3}} x}}})) (numV 10))
 (test (rinterp (cparse '{with {{x 5}} {with {{y x}} y}})) (numV 5))
 (test (rinterp (cparse '{with {{x 5}} {with {{x x}} x}})) (numV 5))
-;hasta aquí
 (test (rinterp (cparse '{{fun {x} x} 3})) (numV 3))
 (test (rinterp (cparse '{{{fun {x} x} {fun {x} {+ x 5}}} 3})) (numV 8))
 (test (rinterp (cparse '{with {{x 3}} {fun {y} {+ x y}}})) (closureV '(y) (binop + (id 'x) (id 'y)) (aSub 'x (numV 3) (mtSub))))
@@ -96,22 +113,7 @@
 (test (rinterp (cparse '{with* {{x 10} {x 20}} x})) (numV 20))
 
 
-; FUNCIONES AUXILIARES
 
 
-(define (dameFAE lst)
-  (if (empty? lst)
-      '()
-      (cons (desugar (car lst)) (dameFAE (cdr lst)))))
 
-(define (sacaName lst)
-  (if (empty? lst)
-      '()
-      (type-case Binding (car lst)
-        [bind (name val) (cons name (sacaName (cdr lst)))])))
 
-(define (sacaVal lst)
-  (if (empty? lst)
-      '()
-      (type-case Binding (car lst)
-        [bind (name val) (cons (desugar val) (sacaVal (cdr lst)))])))
