@@ -25,3 +25,9 @@ debería regresar "[[1, 2], [2, 3]]"
 Pero muy bien sigan así.
 
 **Calificación: 10**
+
+### Practice 3
+Unos detalles en la implementación de su collapse-trackpoints pero
+en general muy bien.
+
+**Calificación: 10**
