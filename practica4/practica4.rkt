@@ -112,8 +112,20 @@
 (test/exn (rinterp (cparse '{with {{x 10} {x 20}} x})) "El id x está repetido")
 (test (rinterp (cparse '{with* {{x 10} {x 20}} x})) (numV 20))
 
+; PRUEBAS
+
+(test (desugar (parse '1)) (num 1))
+(test (desugar (parse 'x)) (id 'x))
+(test (desugar (parse '{fun {x} {x}})) (fun '(x) (app (id 'x) '())))
+(test (desugar (parse '{app {fun {x} {x}} 1})) (app (id 'app) (list (fun '(x) (app (id 'x) '())) (num 1))))
+(test (desugar (parse '{- 2 2})) (binop - (num 2) (num 2)))
 
 
+(interp (desugar (parse '{+ 3 4})) '() )
+(interp (desugar (parse 'x)) (aSub 'x (numV 2) (mtSub)))
+(interp (desugar (parse '{fun {x} {x}})) (mtSub) )
+(interp (desugar (parse '{fun {x} {+ x y}})) (aSub 'y (numV 2) (mtSub)) )
+(interp (desugar (parse '{- y y})) (aSub 'y (numV 2) (mtSub)) ) 
 
 
 
