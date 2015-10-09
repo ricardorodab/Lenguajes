@@ -14,7 +14,11 @@
     [appS (fuS ars) (app (desugar fuS) (dameFAE ars))]
     [binopS (f l r) (binop f (desugar l) (desugar r))]
     [withS (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]
-    [with*S (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]))
+    [with*S (bindings body) ;Nueva implementación de with*S
+            (if (empty? bindings)
+                (desugar body)
+                (desugar (withS (list (car bindings)) (with*S (cdr bindings) body))))]))
+    ;    [with*S (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]))
 
 (define (sacaVal lst)
   (if (empty? lst)
@@ -49,21 +53,47 @@
    [binop (f l r) (opV f (interp l env) (interp r env))]
    [id (name) (lookup name env)]
    [fun (params body) (closureV params body env)]
-   [app (fu args) (local ([define fulist (interp fu env)])
-                         (appArgs fu (closureV-param fulist) args env))]))
+   [app (fu args) (if (revisaArgs args env)
+                      (local ([define fulist (interp fu env)])
+                         (appArgs fu (closureV-param fulist) args env))
+                      (error 'interp "Existe un símbolo que no está en el ambiente"))]))
+
+; Revisa que los argumentos estén en el env.
+
+(define (revisaArgs args env)
+  (if (empty? args)
+      #t
+      (and (lookupExiste (car args) env) (revisaArgs (cdr args) env))))
+
+; Revisa que un sólo argumento se encuentre en el env.
+
+(define (lookupExiste args env)
+  (type-case FAE args
+    [num (n) #t]
+    [binop (f l r) (and (lookupExiste l env) (lookupExiste r env))]
+    [id (name) 
+        (type-case Env env
+          [mtSub () #f]
+          [aSub (name2 value env2)
+                (if (symbol=? name2 name)
+                    #t
+                    (lookupExiste args env2))])]
+    [fun (params body) #t]
+    [app (fu args) #t]))
 
 ; Función auxiliar para la interpretación de aplicación de funciones.
 
 (define (appArgs fu fulst args env)
   (if (empty? (cdr fulst))
-      (local  ([define fun-val (interp fu env)])
+      (local ([define fun-val (interp fu env)])
         (interp (closureV-body fun-val)
                 (aSub (car fulst)
-                      (interp (car args) env) 
+                      (interp (car args) env)
                       (closureV-env fun-val))))
       (appArgs fu (cdr fulst) (cdr args) (aSub (car fulst)
                                                (interp (car args) env)
                                                env))))
+
 
 ; Función para interpretar las funciones binarias.
 
@@ -120,12 +150,15 @@
 (test (desugar (parse '{app {fun {x} {x}} 1})) (app (id 'app) (list (fun '(x) (app (id 'x) '())) (num 1))))
 (test (desugar (parse '{- 2 2})) (binop - (num 2) (num 2)))
 
+; Prueba del with*
 
-(interp (desugar (parse '{+ 3 4})) '() )
-(interp (desugar (parse 'x)) (aSub 'x (numV 2) (mtSub)))
-(interp (desugar (parse '{fun {x} {x}})) (mtSub) )
-(interp (desugar (parse '{fun {x} {+ x y}})) (aSub 'y (numV 2) (mtSub)) )
-(interp (desugar (parse '{- y y})) (aSub 'y (numV 2) (mtSub)) ) 
+(test/exn (rinterp (cparse '{{fun {x y} y} 3 {+ 2 x}})) "Existe un símbolo que no está en el ambiente")
+
+(test (interp (desugar (parse '{+ 3 4})) '() ) (numV 7))
+(test (interp (desugar (parse 'x)) (aSub 'x (numV 2) (mtSub))) (numV 2))
+(test (interp (desugar (parse '{fun {x} {x}})) (mtSub) ) (closureV '(x) (app (id 'x) '()) (mtSub)))
+(test (interp (desugar (parse '{fun {x} {+ x y}})) (aSub 'y (numV 2) (mtSub)) ) (closureV '(x) (binop + (id 'x) (id 'y)) (aSub 'y (numV 2) (mtSub))))
+(test (interp (desugar (parse '{- y y})) (aSub 'y (numV 2) (mtSub)) ) (numV 0))
 
 
 
