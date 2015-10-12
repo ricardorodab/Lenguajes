@@ -31,3 +31,19 @@ Unos detalles en la implementación de su collapse-trackpoints pero
 en general muy bien.
 
 **Calificación: 10**
+
+## Tareas
+
+### Tarea 2
+
+Problema 1: Muy bien, aunque su explicación de como usar el combinador Y para
+obtener funciones recursivas no es la mejor.
+
+Problema 2:  Los operadores lógicos tienen una semantica short-circuit como indican pero esta semantica es usada en lenguajes sean perezosos o glotones así que tu programa no ayuda a indicar que Java es glotón, aunque lo es.
+
+Problema 3: Error mio de la cadena de error, el error debe decir que x no esta
+en el ambiente, pero si están en lo correcto con respecto a los dos interpretes.
+
+Problema 4: Bien su razonamiento, aunque escribir un programa de ejemplo hubiera sido lo mejor.
+
+**Calificación: 9**
