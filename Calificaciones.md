@@ -34,6 +34,15 @@ en general muy bien.
 
 ## Tareas
 
+### Tarea 1
+
+Problema 1: Solo hay que especificar que un Hash es O(1) en obtener un valor
+dada una llave si no hay colisiones.
+Problema 2: Excelente bien explicado.
+Problema 3: Les falto escribir las llamadas a subst y interp.
+
+**Calificación: 9**
+
 ### Tarea 2
 
 Problema 1: Muy bien, aunque su explicación de como usar el combinador Y para
