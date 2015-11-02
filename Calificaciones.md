@@ -32,6 +32,12 @@ en general muy bien.
 
 **Calificación: 10**
 
+### Practice 4
+
+Muy bien, aunque tienen un pequeño bug en el interprete con with multi-parametricos.
+
+**Calificación: 10**
+
 ## Tareas
 
 ### Tarea 1
