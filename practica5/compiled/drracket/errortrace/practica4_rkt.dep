@@ -1,0 +1,1 @@
+("6.2.1" ("4f26e87f94bada3098dfd77aa7dfbcce5b9f0429" . "0fd26167416c3c1d27c4bffd8af9c737ecb9c5d8") (collects #"plai" #"main.rkt") (collects #"racket" #"runtime-config.rkt") #"/Users/ricardo_rodab/Desktop/CC_2016-1/lenguajes/Practicas/practica5/practica4-base.rkt" (collects #"plai" #"lang" #"reader.rkt"))
