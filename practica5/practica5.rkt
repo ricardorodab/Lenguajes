@@ -8,6 +8,7 @@
 
 (define (desugar expr)
   (type-case RCFAELS expr
+    [MEmptyS () (MEmpty)]
     [numS (n) (num n)]
     [idS (name) (id name)]
     [boolS (b) (bool b)]
@@ -16,7 +17,9 @@
     [funS (params body) (fun params (desugar body))]
     [appS (fuS ars) (app (desugar fuS) (dameFCFAEL ars))]
     [binopS (f l r) (binop f (desugar l) (desugar r))]
-    [listS (lst) (listC (map desugar lst))]
+    [boolOpBinS (f l r) (boolOpBin f (desugar l) (desugar r))]
+    [opS (f l) (op f (desugar l))]
+    [listS (rig lef) (listC (desugar rig) (desugar lef))]
     [withS (bindings body) (app (fun (sacaName bindings) (desugar body)) (sacaVal bindings))]
     [with*S (bindings body) ;Nueva implementación de with*S
             (if (empty? bindings)
@@ -53,15 +56,18 @@
 
 (define (interp expr env)
  (type-case FCFAEL expr
+   [MEmpty () (MEmptyV)]
    [num (n) (numV n)]
-   [bool (b) (boolV b)] ;AQUI
-   [listC (lst) (forAllInterp lst env)]
+   [bool (b) (boolV b)]
+   [listC (l r) (listV (interp l env) (interp r env))]
    [ifC (cond case1 case2) (if
                             (valorBool (interp cond env))
                             (interp case1 env)
                             (interp case2 env))]
    [isequal? (cond1 cond2) (valorEqual (interp cond1 env) (interp cond2 env))]
    [binop (f l r) (opV f (interp l env) (interp r env))]
+   [boolOpBin (f l r) (boolOpV f (interp l env) (interp r env))]
+   [op (f l) (opVone f (interp l env))]
    [id (name) (lookup name env)]
    [fun (params body) (closureV params body env)]
    [app (fu args) (if (revisaArgs args env)
@@ -110,12 +116,15 @@
 
 (define (lookupExiste args env)
   (type-case FCFAEL args
+    [MEmpty () #f]
     [num (n) #t]
     [bool (b) #t]
     [ifC (cond case1 case2) #t]
     [isequal? (cond1 cond2) #t]
-    [listC (lst) #t]
+    [boolOpBin (f l r) #t]
+    [listC (l r) #t]
     [binop (f l r) (and (lookupExiste l env) (lookupExiste r env))]
+    [op (f r) (lookupExiste r env)]
     [id (name) 
         (type-case Env env
           [mtSub () #f]
@@ -141,28 +150,61 @@
 
 
 ; Función para interpretar las funciones binarias.
+(define (boolOpV op arg1 arg2)
+  (if (equal? op 'or)
+      (type-case FCFAEL-Value arg1        
+        [boolV (b1)
+               (type-case FCFAEL-Value arg2
+                 [boolV (b2) (boolV (or b1 b2))]
+                 [else (error 'opV "No boolV")])]
+        [else (error 'opV "No numV")])
+      (type-case FCFAEL-Value arg1        
+        [boolV (b1)
+               (type-case FCFAEL-Value arg2
+                 [boolV (b2) (boolV (and b1 b2))]
+                 [else (error 'opV "No boolV")])]
+        [else (error 'opV "No numV")])))
+      
 
-#|(define (opV proc num1 num2)
-  (type-case FCFAEL-Value num1
-    [numV (n1)
-          (type-case FCFAEL-Value num2
-            [numV (n2) (numV (proc n1 n2))]
-            [else (error 'opV "No numV")])]   
-    [else (error 'opV "No numV")]))
+(define (opVone proc args)
+  (case proc
+    ['inc (type-case FCFAEL-Value args
+            [numV (n) (numV (+ n 1))]
+            [else (error 'opVone "No numV")])]
+    ['dec (type-case FCFAEL-Value args
+            [numV (n) (numV (- n 1))]
+            [else (error 'opVone "No numV")])]
+    ['zero? (type-case FCFAEL-Value args
+              [numV (n) (boolV (zero? n))]
+              [else (boolV #f)])]
+    ['num? (type-case FCFAEL-Value args
+             [numV (n) (boolV #t)]
+             [else (boolV #f)])]
+    ['neg (type-case FCFAEL-Value args
+            [boolV (n) (boolV (not n))]
+            [else (error 'opVone "No boolV")])]
+    ['bool? (type-case FCFAEL-Value args
+              [boolV (n) (boolV #t)]
+              [else (boolV #f)])]
+    ['first (type-case FCFAEL-Value args
+              [listV (fst rst) fst]
+              [else (error 'opVone "No listV")])]
+    ['rest (type-case FCFAEL-Value args
+             [listV (fst rst) rst]
+             [else (error 'opVone "No listV")])]
+    ['empty? (type-case FCFAEL-Value args
+               [listV (fst rst) (if (and (equal? fst (MEmptyV)) (equal? (MEmptyV) rst))
+                                    (boolV #t)
+                                    (boolV #f))]
+               [MEmptyV () (boolV #t)]
+               [else (boolV #f)])]
+    ['list? (type-case FCFAEL-Value args
+              [listV (fst rst) (boolV #t)]
+              [MEmptyV () (boolV #t)]
+              [else (boolV #f)])]))
 
-
-(case proc
-                    [(+) (numV (proc arg1 arg2))]
-                    [(-) (numV (proc arg1 arg2))]
-                    [(*) (numV (proc arg1 arg2))]
-                    [(/) (numV (proc arg1 arg2))]
-    [(<) (boolV (< arg1 arg2))]
-    [(>) (boolV (> arg1 arg2))]
-    [(<=) (boolV (<= arg1 arg2))]
-    [(>=) (boolV (>= arg1 arg2))]
-    [(and) (boolV (and arg1 arg2))]
-    [(or) (boolV (or arg1 arg2))]))
-|#
+  ;(type-case FCFAEL-Value args
+   ; [numV (n1
 
 (define (opV proc arg1 arg2)
   (type-case FCFAEL-Value arg1
@@ -240,15 +282,27 @@
 ; PRUEBAS PRÁCTICA 5
 
 
-(test (rinterp (cparse true)) (boolV #t))
+(test (rinterp (cparse 'true)) (boolV #t))
 
-(test (interp (desugar (parse '{lista 22 (false) (+ 2 3) (/ 27 9) (true)})) (mtSub)) (list (numV 22) (boolV #f) (numV 5) (numV 3) (boolV #t)))
+(test (interp (desugar (parse '{lista 22 (false) (+ 2 3) (/ 27 9) (true)})) (mtSub)) (listV (numV 22) (listV (boolV #f) (listV (numV 5) (listV (numV 3) (listV (boolV #t) (MEmptyV)))))))
 
-(test (rinterp (cparse {if (< {+ 2 2} {* 2 2}) 1024 2048})) (numV 2048))
-(test (rinterp (cparse {if (<= {+ 2 2} {* 2 2}) 1024 2048})) (numV 1024))
-(test (rinterp (cparse {or true false})) (boolV #t))
-(test (rinterp (cparse {equal? 4 5})) (boolV #f))
-(test (rinterp (cparse {equal? 5 5})) (boolV #t))
+(test (rinterp (cparse '{if (< {+ 2 2} {* 2 2}) 1024 2048})) (numV 2048))
+(test (rinterp (cparse '{if (<= {+ 2 2} {* 2 2}) 1024 2048})) (numV 1024))
+(test (rinterp (cparse '{or 'true 'false})) (boolV #t))
+(test (rinterp (cparse '{equal? 4 5})) (boolV #f))
+(test (rinterp (cparse '{equal? 5 5})) (boolV #t))
 
-
-
+(test (rinterp (cparse '{inc 9})) (numV 10))
+(test (rinterp (cparse '{dec 10})) (numV 9))
+(test (rinterp (cparse '{zero? 0})) (boolV #t))
+(test (rinterp (cparse '{num? 'false})) (boolV #f))
+(test (rinterp (cparse '{bool? 'true})) (boolV #t))
+(test (rinterp (cparse '{first {lista 4 10 5}})) (numV 4))
+(test (rinterp (cparse '{rest {lista 4 10 5}})) (listV (numV 10) (listV (numV 5) (MEmptyV))))
+(test (rinterp (cparse '{empty? {lista }})) (boolV #t))
+(test (rinterp (cparse '{list? {lista }})) (boolV #t))
+(test (rinterp (cparse '{list? {with {{r 4}} {+ 3 r}}})) (boolV #f))
+(test (rinterp (cparse '{and {> 4 2} {>= 6 6}})) (boolV #t))
+                
+                                
+                                

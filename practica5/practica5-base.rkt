@@ -2,9 +2,11 @@
 
 (define-type Binding
   [bind (name symbol?) (val RCFAELS?)])
-;(RCFAELS? (listS (numS 3) (listS (boolS #t) (numS 4))))
+
+
 
 (define-type RCFAELS
+  [MEmptyS]
   [numS (n number?)]
   [withS (bindings (listof bind?))
          (body RCFAELS?)]
@@ -18,15 +20,22 @@
   [binopS (f procedure?)
          (l RCFAELS?)
          (r RCFAELS?)]
+  [boolOpBinS (f symbol?)
+             (l RCFAELS?)
+             (r RCFAELS?)]
+  [opS (f symbol?)
+       (rst RCFAELS?)]
   [boolS (b boolean?)]
   [ifS (cond RCFAELS?)
        (case1 RCFAELS?)
        (case2 RCFAELS?)]
   [equalS? (comp1 RCFAELS?)
            (comp2 RCFAELS?)]
-  [listS (elems (listof RCFAELS?))])
+  [listS (n RCFAELS?)
+         (rst RCFAELS?)])
 
 (define-type FCFAEL
+  [MEmpty]
   [num (n number?)]
   [id (name symbol?)]
   [fun (params (listof symbol?))
@@ -36,19 +45,27 @@
   [binop (f procedure?)
          (l FCFAEL?)
          (r FCFAEL?)]
+  [boolOpBin (f symbol?)
+             (l FCFAEL?)
+             (r FCFAEL?)]
+  [op (f symbol?)
+      (rst FCFAEL?)]
   [bool (b boolean?)]
   [isequal? (cond1 FCFAEL?)
             (cond2 FCFAEL?)]
   [ifC (cond FCFAEL?)
       (case1 FCFAEL?)
       (case2 FCFAEL?)]
-  [listC (restlst (listof FCFAEL?))])
+  [listC (n FCFAEL?)
+         (rst FCFAEL?)])
   
 
 (define-type FCFAEL-Value
+  [MEmptyV]
   [numV (n number?)]
   [boolV (b boolean?)]
-  [listV (elements (listof FCFAEL-Value?))]
+  [listV (n FCFAEL-Value?)
+         (rst FCFAEL-Value?)]
   [closureV (param (listof symbol?))
             (body FCFAEL?)
             (env Env?)])
@@ -83,8 +100,20 @@
     [(>) >]
     [(<=) <=]
     [(>=) >=]
-    [(and) (and)]
-    [(or) (or)]))
+    [(and) 'and]
+    [(or) 'or]
+    ['and 'and]
+    ['or 'or]
+    [(inc) 'inc]
+    [(dec) 'dec]
+    [(zero?) 'zero?]
+    [(num?) 'num?]
+    [(neg) 'neg]
+    [(bool?) 'bool?]
+    [(first) 'first]
+    [(rest) 'rest]
+    [(empty?) 'empty?]
+    [(list?) 'list?]))
 
     
 ;; buscaRepetido: listof(X) (X X -> boolean) -> X
@@ -113,22 +142,37 @@
     [(empty? lst) empty]
     [else (cons (parse (car lst)) (forAllParse (cdr lst)))]))
 
+(define (parseList exp)
+  (if (empty? (cdr exp))
+      (listS (parse (car exp)) (MEmptyS))
+      (listS (parse (car exp)) (parseList (cdr exp)))))
+
 ;; A::= <number>|<symbol>|listof(<A>)
 ;; parse: A -> RCFAELS
 (define (parse sexp)
   (cond
+    [(equal? sexp 'true) (boolS #t)]
+    [(equal? sexp 'false) (boolS #f)]
     [(symbol? sexp) (idS sexp)]
     [(number? sexp) (numS sexp)]
     [(boolean? sexp) (boolS sexp)]
+
     [(list? sexp)
      (case (car sexp)
        [(true) (boolS #t)]
        [(false) (boolS #f)]
+       [('true) (boolS #t)]
+       [('false) (boolS #f)]
+       ['quote (parse (cdr sexp))]
        [(equal?) (equalS? (parse (cadr sexp)) (parse (caddr sexp)))] 
        [(if) (ifS (parse (cadr sexp)) (parse (caddr sexp)) (parse (cadddr sexp)))]
        [(with) (withS (parse-bindings (cadr sexp) #f) (parse (caddr sexp)))]
        [(with*) (with*S (parse-bindings (cadr sexp) #t) (parse (caddr sexp)))]
        [(fun) (funS (cadr sexp) (parse (caddr sexp)))]
-       [(lista) (listS (map parse (cdr sexp)))]
-       [(+ - / * < > <= >= and or) (binopS (elige (car sexp)) (parse (cadr sexp)) (parse (caddr sexp)))]
+       [(lista) (if (empty? (cdr sexp))
+                    (listS (MEmptyS) (MEmptyS))
+                    (parseList (cdr sexp)))]
+       [(+ - / * < > <= >=) (binopS (elige (car sexp)) (parse (cadr sexp)) (parse (caddr sexp)))]
+       [(and or 'and 'or (or) (and)) (boolOpBinS (elige (car sexp)) (parse (cadr sexp)) (parse (caddr sexp)))]
+       [(inc dec zero? num? neg bool? first rest empty? list?) (opS (elige (car sexp)) (parse (cadr sexp)))]
        [else (appS (parse (car sexp)) (map parse (cdr sexp)))])]))
