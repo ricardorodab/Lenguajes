@@ -32,7 +32,10 @@
   [equalS? (comp1 RCFAELS?)
            (comp2 RCFAELS?)]
   [listS (n RCFAELS?)
-         (rst RCFAELS?)])
+         (rst RCFAELS?)]
+  [recS (name symbol?)
+        (name-exp RCFAELS?)
+        (body RCFAELS?)])
 
 (define-type FCFAEL
   [MEmpty]
@@ -57,7 +60,10 @@
       (case1 FCFAEL?)
       (case2 FCFAEL?)]
   [listC (n FCFAEL?)
-         (rst FCFAEL?)])
+         (rst FCFAEL?)]
+   [rec (name symbol?)
+        (name-exp FCFAEL?)
+        (body FCFAEL?)])
   
 
 (define-type FCFAEL-Value
@@ -70,11 +76,18 @@
             (body FCFAEL?)
             (env Env?)])
 
+(define (enCaja? var)
+  (and (box? var)
+       (FCFAEL-Value? (unbox var))))
+
 (define-type Env
   [mtSub]
   [aSub (name symbol?) 
         (value FCFAEL-Value?) 
-        (env Env?)])
+        (env Env?)]
+  [recSub (name symbol?)
+           (value enCaja?)
+           (env Env?)])
 
 ; FUNCIONES AUXILIARES
 
@@ -175,4 +188,5 @@
        [(+ - / * < > <= >=) (binopS (elige (car sexp)) (parse (cadr sexp)) (parse (caddr sexp)))]
        [(and or 'and 'or (or) (and)) (boolOpBinS (elige (car sexp)) (parse (cadr sexp)) (parse (caddr sexp)))]
        [(inc dec zero? num? neg bool? first rest empty? list?) (opS (elige (car sexp)) (parse (cadr sexp)))]
+       [(rec) (recS (caadr sexp) (parse (cadadr sexp)) (parse (caddr sexp)))]
        [else (appS (parse (car sexp)) (map parse (cdr sexp)))])]))

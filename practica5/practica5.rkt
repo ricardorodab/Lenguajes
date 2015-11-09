@@ -12,6 +12,7 @@
     [numS (n) (num n)]
     [idS (name) (id name)]
     [boolS (b) (bool b)]
+    [recS (name name-exp body) (rec name (desugar name-exp) (desugar body))]
     [equalS? (cond1 cond2) (isequal? (desugar cond1) (desugar cond2))]
     [ifS (cond case1 case2) (ifC (desugar cond) (desugar case1) (desugar case2))]
     [funS (params body) (fun params (desugar body))]
@@ -59,6 +60,8 @@
    [MEmpty () (MEmptyV)]
    [num (n) (numV n)]
    [bool (b) (boolV b)]
+    [rec (bound-id named-expr bound-body) (interp bound-body
+                                                  (recursidad-interp bound-id named-expr env))]
    [listC (l r) (listV (interp l env) (interp r env))]
    [ifC (cond case1 case2) (if
                             (valorBool (interp cond env))
@@ -80,13 +83,20 @@
     [(empty? lst) empty]
     [else (cons (interp (car lst) env) (forAllInterp (cdr lst) env))]))
 
+(define (1x1 lst1 lst2)
+  (if (empty? lst1)
+      #t
+      (if (equal? (car lst1) (car lst2))
+          (1x1 (cdr lst1) (cdr lst2))
+          #t)))
+
 (define (valorEqual cond1 cond2)
   (cond
     [(list? cond1)
      (if (not (list? cond2))
          (boolV #f)
          (if (= (length cond1) (length cond2))
-             (boolV #t) ;REVISAR 1 X 1
+             (boolV (1x1 cond1 cond2))
              (boolV #f)))]
      [(list? cond2) (boolV #f)]
      [else (type-case FCFAEL-Value cond1
@@ -119,6 +129,7 @@
     [MEmpty () #f]
     [num (n) #t]
     [bool (b) #t]
+    [rec (l e r) #t]
     [ifC (cond case1 case2) #t]
     [isequal? (cond1 cond2) #t]
     [boolOpBin (f l r) #t]
@@ -131,7 +142,8 @@
           [aSub (name2 value env2)
                 (if (symbol=? name2 name)
                     #t
-                    (lookupExiste args env2))])]
+                    (lookupExiste args env2))]
+          [else #t])]
     [fun (params body) #t]
     [app (fu args) #t]))
 
@@ -203,8 +215,6 @@
               [MEmptyV () (boolV #t)]
               [else (boolV #f)])]))
 
-  ;(type-case FCFAEL-Value args
-   ; [numV (n1
 
 (define (opV proc arg1 arg2)
   (type-case FCFAEL-Value arg1
@@ -229,7 +239,19 @@
      [aSub (name2 value env2)
            (if (symbol=? name2 name)
                value
-               (lookup name env2))]))
+               (lookup name env2))]
+    [recSub (bound-name valor env2)
+             (if (symbol=? bound-name name)
+                 (unbox valor)
+                 (lookup name env2))]))
+ 
+(define (recursidad-interp id named-expr env)
+  (local ([define value-holder (box (numV 1729))]
+          [define new-env (recSub id value-holder env)]
+          [define named-expr-val (interp named-expr new-env)])
+    (begin
+      (set-box! value-holder named-expr-val)
+      new-env)))
   
 (define (rinterp expr)
   (interp expr (mtSub)))
@@ -303,6 +325,16 @@
 (test (rinterp (cparse '{list? {lista }})) (boolV #t))
 (test (rinterp (cparse '{list? {with {{r 4}} {+ 3 r}}})) (boolV #f))
 (test (rinterp (cparse '{and {> 4 2} {>= 6 6}})) (boolV #t))
+
+(test (rinterp (cparse '{rec (fac (fun (n) (if (zero? n)
+                                   1
+                                   (* n (fac (dec n)))
+                                   ))) (fac 3)})) (numV 6))
+(test (rinterp (cparse '{rec (fac (fun (n) (if (zero? n)
+                                   1
+                                   (* n (fac (dec n)))
+                                   ))) (fac 10)})) (numV 3628800))
+
                 
                                 
                                 
