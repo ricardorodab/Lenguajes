@@ -5,8 +5,6 @@ import os
 class GraphReader:
 
     def __init__(self, archivo_entrada):
-        #try:
-        #self.archivo = open(archivo_entrada, 'r+')
         self.archivo = archivo_entrada
         if isinstance(archivo_entrada, str):
             filename, file_extension = os.path.splitext(archivo_entrada)
@@ -15,9 +13,7 @@ class GraphReader:
             temp = dame_tipo_graph(self.ext)
             self.graph = temp.dame_graph(self.archivo)
         else:
-            raise ValueError('A very specific bad thing happened')
-        #except:
-        #    print("Favor de pasar el archivo como una cadena")
+            raise ValueError('Favor de pasar el archivo como una cadena')
 
     def get_graph(self):
         return self.graph

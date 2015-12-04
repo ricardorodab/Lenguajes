@@ -8,6 +8,9 @@ class Graph(TDA):
         TDA.__init__(self, vert)
         self.digraph = digraph
 
+    def dame_graph(self):
+        return self
+
     def set_directed(self,value):
         self.digraph = value
         
@@ -19,7 +22,7 @@ class Graph(TDA):
         if self.digraph:
             for i in self.v.values():
                 for j in i.neighbours():
-                    lista += [self.v[i].get_arista(j)]
+                    lista += [self.v[i.get_elem()].get_arista(j)]
         else:
             vecinos_pasados = []
             for i in self.v:

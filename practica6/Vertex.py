@@ -3,7 +3,7 @@ from Edges import Edge
 
 class Vertex(Nodo):
 
-    def __init__(self,elem,aristas = {}):
+    def __init__(self,elem,aristas):
         Nodo.__init__(self,elem)
         self.aristas = aristas
         if aristas == {}:            
@@ -19,7 +19,7 @@ class Vertex(Nodo):
         arista = Edge(self, nodo, peso)
         self.aristas[nodo] = arista
         self.grado += 1
-        return arista
+        
 
     def desconecta(self,nodo):
         if self.aristas[nodo] != None:
@@ -31,7 +31,7 @@ class Vertex(Nodo):
 
     def neighbours(self):
         vecinos = []
-        conex = list(self.aristas.values()) #ERROR
+        conex = self.aristas.values()
         for i in conex:
             if self == i.tvertex():
                 vecinos += [i.svertex()]

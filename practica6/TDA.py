@@ -7,11 +7,12 @@ class TDA:
 
     def vertices(self):
         return list(self.v.values())
-#        valores = self.v.keys()
-#        return list(valores)
 
+    def is_element(self, obj):
+        return obj in self.v.keys()
+    
     def add(self, obj):
-        nodo = Vertex(obj)
+        nodo = Vertex(obj,{})
         self.v[obj] = nodo
 
     def elimina(self, obj):
