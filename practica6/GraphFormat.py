@@ -1,16 +1,23 @@
 from Graph import Graph
 from xml.dom import minidom
 import json
+import sys
 
 def dame_tipo_graph(ext):
-    if ext == ".xml":
-        return GraphXML()
-    elif ext == ".csv":
-        return GraphCSV()
-    elif ext == ".json":
-        return GraphJSON()
-    else:
-        raise ValueError('Formato no valido')
+    try:
+        if ext == ".xml":
+            return GraphXML()
+        elif ext == ".csv":
+            return GraphCSV()
+        elif ext == ".json":
+            return GraphJSON()
+        else:
+            raise ValueError('Formato no valido')
+    except:
+        print("El tipo de archivo no es correcto")
+        print("El archivo debe ser .xml,.json,.csv")
+        sys.exit(1)
+        
     
 class GraphXML(Graph):
 
@@ -59,7 +66,7 @@ class GraphJSON(Graph):
             json_data.close()
             return Graph(self.digraph,self.v)
         except:
-            print("El archivo XML se encuentra corrupto")
+            print("El archivo JSON se encuentra corrupto")
         
 class GraphCSV(Graph):
 
@@ -89,5 +96,5 @@ class GraphCSV(Graph):
                 linea = archivo_lectura.readline()            
             return Graph(self.digraph,self.v)
         except:
-            print("El archivo XML se encuentra corrupto")
+            print("El archivo CSV se encuentra corrupto")
         
