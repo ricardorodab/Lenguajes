@@ -5,20 +5,26 @@ class Edge():
         self.fin = nodoFin
         self.peso = peso
 
-    def agregar_fin(vertice):
+    def __str__(self):
+        cadena = "[" +self.ini.__str__() + " " + self.fin.__str__() + " " + str(self.peso)+ "]"
+        return cadena
+
+    def agregar_fin(self,vertice):
         self.fin = vertice
 
-    def agrega_inicio(vertice):
+    def agrega_inicio(self,vertice):
         self.ini = vertice
 
-    def tvertex():
+    def tvertex(self):
         return self.fin
 
-    def svertex():
+    def svertex(self):
         return self.ini
 
-    def weight():
+    def weight(self):
         return self.peso
     
-    def set_weight(w):
+    def set_weight(self,w):
         self.peso = w
+
+    __repr__ = __str__

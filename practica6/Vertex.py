@@ -11,24 +11,27 @@ class Vertex(Nodo):
         else:
             self.grado = len(aristas)
 
-    def agrega_vecino(nodo,peso):
+    def __str__(self):
+        return self.elem
+            
+    def agrega_vecino(self,nodo,peso):
         #actual = Vertex(self,self.elem,self.aristas)
         arista = Edge(self, nodo, peso)
         self.aristas[nodo] = arista
         self.grado += 1
         return arista
 
-    def desconecta(nodo):
+    def desconecta(self,nodo):
         if self.aristas[nodo] != None:
             self.aristas[nodo] = None
             self.grado -= 1
 
-    def degree():
+    def degree(self):
         return self.grado
 
-    def neighbours():
+    def neighbours(self):
         vecinos = []
-        conex = list(self.aristas.values())
+        conex = list(self.aristas.values()) #ERROR
         for i in conex:
             if self == i.tvertex():
                 vecinos += [i.svertex()]
@@ -36,7 +39,7 @@ class Vertex(Nodo):
                 vecinos += [i.tvertex()]
         return vecinos
 
-    def get_arista(nodo):
+    def get_arista(self,nodo):
         return self.aristas[nodo]
     
-    
+    __repr__ = __str__
