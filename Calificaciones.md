@@ -62,3 +62,19 @@ en el ambiente, pero si están en lo correcto con respecto a los dos interpretes
 Problema 4: Bien su razonamiento, aunque escribir un programa de ejemplo hubiera sido lo mejor.
 
 **Calificación: 9**
+
+### Tarea 3
+
+Problema I: Falto el juicio de fibonacci.
+
+Problema II: Muy bien.
+
+Problema III: No hicieron nada.
+
+Problema IV: Bien.
+
+Problema V: Bien.
+
+Problema VI: Muy bien.
+
+**Calificación: 7.5**
