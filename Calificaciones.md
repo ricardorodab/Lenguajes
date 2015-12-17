@@ -38,6 +38,17 @@ Muy bien, aunque tienen un pequeño bug en el interprete con with multi-parametr
 
 **Calificación: 10**
 
+### Practice 5
+
+Todo bien pero les falto la implementacion
+de recursion usando procedimientos.
+
+**Calificación: 8**
+
+### Practice 6
+
+**Calificación: 10**
+
 ## Tareas
 
 ### Tarea 1
